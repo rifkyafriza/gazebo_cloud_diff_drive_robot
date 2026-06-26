@@ -3,7 +3,7 @@ import xacro
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, SetEnvironmentVariable
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -14,11 +14,11 @@ def generate_launch_description():
     robot_name = "differential_drive_robot"
     package_name = "gazebo_differential_drive_robot"
 
-    # Define a launch argument for the world file, defaulting to "empty.sdf"
+    # Define a launch argument for the world file, defaulting to obstacles.sdf
     world_arg = DeclareLaunchArgument(
         'world',
-        default_value='empty.sdf',
-        description='Specify the world file for Gazebo (e.g., empty.sdf)'
+        default_value=os.path.join(get_package_share_directory(package_name), 'worlds', 'obstacles.sdf'),
+        description='Specify the world file for Gazebo'
     )
 
     # Define launch arguments for initial pose
@@ -78,7 +78,7 @@ def generate_launch_description():
     gazebo_launch = IncludeLaunchDescription(
         gazebo_pkg_launch,
         launch_arguments={
-            'gz_args': [f'-r -v 4 ', world_file],
+            'gz_args': [f' -r -v 4 ', world_file],
             'on_exit_shutdown': 'true'
         }.items()
     )
@@ -89,8 +89,8 @@ def generate_launch_description():
         executable='create',
         arguments=[
             '-name', robot_name,
+            '-world', 'empty',
             '-string', robot_description,
-            '-x', x,
             '-y', y,
             '-z', z,
             '-R', roll,
