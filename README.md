@@ -1,8 +1,10 @@
-# Differential Drive Robot Simulation
+# Cloud-Integrated Differential Drive Robot
 
 ## About
 
-This package provides a simple differential drive robot model designed for use in Gazebo Harmonic simulation with ROS 2 Jazzy Jalisco. 
+This package provides a heavily upgraded differential drive robot model designed for use in Gazebo Harmonic simulation with ROS 2 Jazzy Jalisco. 
+
+It features built-in VPS reverse-tunneling capabilities, real-time telemetry/FPS tracking, and an interactive Web Dashboard allowing you to monitor and control the robot remotely over the public internet directly from your browser.
 
 ## Requirements
 
