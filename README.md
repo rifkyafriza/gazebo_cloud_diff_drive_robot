@@ -24,7 +24,9 @@ sudo apt install -y                         \
     ros-jazzy-joint-state-publisher         \
     ros-jazzy-xacro                         \
     ros-jazzy-teleop-twist-keyboard         \
-    ros-jazzy-teleop-twist-joy 
+    ros-jazzy-teleop-twist-joy              \
+    ros-jazzy-rosbridge-server              \
+    ros-jazzy-web-video-server
 ```
 
 ## Usage
