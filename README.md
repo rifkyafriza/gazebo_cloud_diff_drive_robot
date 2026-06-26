@@ -74,7 +74,7 @@ To launch the robot in a specified world with a custom initial pose, run the `ro
 In the following example, the robot starts at position (x, y, z) = (1.0, 2.0, 0.5) with a yaw of 1.57 radians in the specified world:
 
 ```bash
-ros2 launch gazebo_differential_drive_robot robot.launch.py world:=/path_to_world/world.sdf x:=1.0 y:=2.0 z:=0.5 R:=0.0 P:=0.0 Y:=1.57
+ros2 launch gazebo_differential_drive_robot robot.launch.py world:=empty.sdf x:=1.0 y:=2.0 z:=0.5 R:=0.0 P:=0.0 Y:=1.57
 ```
 
 **Testing with Obstacles**: A custom world with colorful geometric obstacles is included for testing the camera and LiDAR sensors. You can launch it using:
