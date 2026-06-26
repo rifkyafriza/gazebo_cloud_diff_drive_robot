@@ -16,7 +16,7 @@ WEBVIDEO_PID=$!
 
 echo "Starting server-side FPS calculator..."
 # Adjust this path if your workspace is different
-/home/hp/ros2_ws/src/gazebo_differential_drive_robot/fps_publisher.py &
+/home/hp/ros2_ws/src/gazebo_differential_drive_robot/scripts/fps_publisher.py &
 FPS_PID=$!
 
 echo "Opening SSH reverse tunnel to VPS..."

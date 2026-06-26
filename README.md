@@ -105,7 +105,7 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ### Local Development Tools
 If you want to view the robot's camera feed directly on your local machine without setting up the remote dashboard or web servers, you can use the included viewer script:
 ```bash
-./view_camera.py
+./scripts/view_camera.py
 ```
 This requires OpenCV (`python3-opencv`) and CV Bridge.
 
@@ -165,12 +165,12 @@ This repository has been modified to support seamless remote telemetry and contr
 ### Deploying the VPS Connection
 To connect the robot to your remote dashboard, copy the example script:
 ```bash
-cp connect_vps.example.sh connect_vps.sh
-chmod +x connect_vps.sh
+cp scripts/connect_vps.example.sh scripts/connect_vps.sh
+chmod +x scripts/connect_vps.sh
 ```
-Edit `connect_vps.sh` and replace `YOUR_VPS_IP` and `YOUR_KEY.pem` with your actual server credentials. Note that `connect_vps.sh` is safely ignored by `.gitignore` to keep your credentials private.
+Edit `scripts/connect_vps.sh` and replace `YOUR_VPS_IP` and `YOUR_KEY.pem` with your actual server credentials. Note that `scripts/connect_vps.sh` is safely ignored by `.gitignore` to keep your credentials private.
 
 Run the script to establish the connection:
 ```bash
-./connect_vps.sh
+./scripts/connect_vps.sh
 ```
