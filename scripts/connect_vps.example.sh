@@ -15,8 +15,8 @@ ros2 run web_video_server web_video_server &
 WEBVIDEO_PID=$!
 
 echo "Starting server-side FPS calculator..."
-# Adjust this path if your workspace is different
-/home/hp/ros2_ws/src/gazebo_differential_drive_robot/scripts/fps_publisher.py &
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/fps_publisher.py" &
 FPS_PID=$!
 
 echo "Opening SSH reverse tunnel to VPS..."
