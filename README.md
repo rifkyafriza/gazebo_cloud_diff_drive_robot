@@ -102,6 +102,17 @@ source /opt/ros/jazzy/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
+### Web Dashboard (Local Use)
+This package includes a standalone web dashboard (`web/dashboard.html`) to view the camera feed, track the robot's trajectory, and control it via an intuitive UI. 
+
+To use it locally:
+1. Ensure the required ROS 2 Web servers are running:
+```bash
+ros2 run rosbridge_server rosbridge_websocket &
+ros2 run web_video_server web_video_server &
+```
+2. Simply double-click `web/dashboard.html` to open it in your web browser. It is preconfigured to connect to `ws://localhost:9090`.
+
 ### Local Development Tools
 If you want to view the robot's camera feed directly on your local machine without setting up the remote dashboard or web servers, you can use the included viewer script:
 ```bash

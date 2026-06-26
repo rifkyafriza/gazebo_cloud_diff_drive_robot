@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Robot Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f0f; color: #e0e0e0; font-family: monospace; }
+  header { background: #1a1a2e; padding: 12px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #333; }
+  header h1 { font-size: 1.1rem; color: #00d4ff; }
+  #status { font-size: 0.8rem; padding: 3px 10px; border-radius: 12px; background: #333; }
+  #status.connected { background: #1a4a1a; color: #4caf50; }
+  #status.disconnected { background: #4a1a1a; color: #f44336; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 12px; padding: 12px; height: calc(100vh - 52px); }
+  .panel { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+  .panel-title { background: #222; padding: 8px 14px; font-size: 0.75rem; color: #888; border-bottom: 1px solid #2a2a2a; letter-spacing: 1px; text-transform: uppercase; }
+  /* Camera */
+  #camera-panel { grid-column: 1; grid-row: 1; }
+  #camera-img { width: 100%; height: 100%; object-fit: contain; background: #000; flex: 1; }
+  .no-signal { flex: 1; display: flex; align-items: center; justify-content: center; color: #444; font-size: 0.85rem; }
+  /* Trajectory */
+  #map-panel { grid-column: 2; grid-row: 1; }
+  #traj-canvas { flex: 1; width: 100%; }
+  /* Telemetry */
+  #telem-panel { grid-column: 1; grid-row: 2; padding: 14px; gap: 6px; }
+  .telem-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #222; font-size: 0.85rem; }
+  .telem-row span:last-child { color: #00d4ff; }
+  /* Teleop */
+  #teleop-panel { grid-column: 2; grid-row: 2; align-items: center; justify-content: center; gap: 10px; padding: 14px; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(3, 52px); gap: 4px; }
+  .dpad button { background: #252525; border: 1px solid #333; border-radius: 6px; color: #ccc; font-size: 1.2rem; cursor: pointer; transition: background 0.1s; }
+  .dpad button:hover, .dpad button:active { background: #00d4ff22; border-color: #00d4ff; color: #00d4ff; }
+  .dpad button.empty { visibility: hidden; }
+  .speed-row { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #888; margin-top: 6px; }
+  .speed-row input { width: 100px; accent-color: #00d4ff; }
+  #ws-url-bar { background: #111; border: 1px solid #333; padding: 6px 12px; border-radius: 4px; color: #aaa; font-size: 0.8rem; width: 280px; }
+  #connect-btn { background: #00d4ff22; border: 1px solid #00d4ff55; color: #00d4ff; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+  #connect-btn:hover { background: #00d4ff44; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 Robot Dashboard</h1>
+  <input id="ws-url-bar" value="ws://localhost:9090" placeholder="ws://localhost:9090"/>
+  <button id="connect-btn" onclick="connectWS()">Connect</button>
+  <div id="status" class="disconnected">DISCONNECTED</div>
+</header>
+
+<div class="grid">
+  <!-- Camera -->
+  <div class="panel" id="camera-panel">
+    <div class="panel-title">
+      📷 Camera Feed 
+      <select id="cam-res-select" style="background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 0.8em; margin-left: 10px; cursor: pointer;">
+        <option value="1280,720,80">1280x720 (High)</option>
+        <option value="640,360,50" selected>640x360 (Medium)</option>
+        <option value="320,180,30">320x180 (Low)</option>
+      </select>
+      <span style="font-size: 0.8em; color: #88ff88; float: right;">Robot: <span id="robot-fps">0.0</span> | Browser: <span id="browser-fps">0</span></span>
+    </div>
+    <div class="camera-placeholder" id="no-signal">No Signal</div>
+    <img id="camera-img" style="display: none; width: 100%; height: auto;" crossorigin="anonymous">
+  </div>
+
+  <!-- Trajectory map -->
+  <div class="panel" id="map-panel">
+    <div class="panel-title">🗺️ Trajectory &amp; Orientation</div>
+    <canvas id="traj-canvas"></canvas>
+  </div>
+
+  <!-- Telemetry -->
+  <div class="panel" id="telem-panel" style="display:flex; flex-direction:column;">
+    <div class="panel-title">📊 Telemetry</div>
+    <div class="telem-row"><span>Position X</span><span id="t-x">—</span></div>
+    <div class="telem-row"><span>Position Y</span><span id="t-y">—</span></div>
+    <div class="telem-row"><span>Yaw (°)</span><span id="t-yaw">—</span></div>
+    <div class="telem-row"><span>Lin. Vel (m/s)</span><span id="t-lv">—</span></div>
+    <div class="telem-row"><span>Ang. Vel (rad/s)</span><span id="t-av">—</span></div>
+    <div class="telem-row"><span>Topic Hz</span><span id="t-hz">—</span></div>
+  </div>
+
+  <!-- Teleop -->
+  <div class="panel" id="teleop-panel" style="display:flex; flex-direction:column;">
+    <div class="panel-title">🕹️ Teleop Control</div>
+    <div class="dpad">
+      <button class="empty"></button>
+      <button onmousedown="drive(1,0)"  onmouseup="stop()" ontouchstart="drive(1,0)"  ontouchend="stop()">▲</button>
+      <button class="empty"></button>
+      <button onmousedown="drive(0,1)"  onmouseup="stop()" ontouchstart="drive(0,1)"  ontouchend="stop()">◀</button>
+      <button onmousedown="stop()"      onmouseup="stop()">■</button>
+      <button onmousedown="drive(0,-1)" onmouseup="stop()" ontouchstart="drive(0,-1)" ontouchend="stop()">▶</button>
+      <button class="empty"></button>
+      <button onmousedown="drive(-1,0)" onmouseup="stop()" ontouchstart="drive(-1,0)" ontouchend="stop()">▼</button>
+      <button class="empty"></button>
+    </div>
+    <div class="speed-row">
+      Lin <input type="range" id="lin-speed" min="0.1" max="2" step="0.1" value="0.5">
+      <span id="lin-val">0.5</span> m/s
+    </div>
+    <div class="speed-row">
+      Ang <input type="range" id="ang-speed" min="0.1" max="2" step="0.1" value="0.8">
+      <span id="ang-val">0.8</span> rad/s
+    </div>
+  </div>
+</div>
+
+<script>
+// ── roslib ──
+const ROSLIB_CDN = 'https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js';
+let ros, camSub, odomSub, cmdPub;
+let trail = [], lastOdomTime = 0, odomCount = 0, hzTimer = 0;
+
+document.getElementById('lin-speed').oninput = e => document.getElementById('lin-val').textContent = e.target.value;
+document.getElementById('ang-speed').oninput = e => document.getElementById('ang-val').textContent = e.target.value;
+
+function loadRoslib(cb) {
+  if (window.ROSLIB) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = ROSLIB_CDN; s.onload = cb; document.head.appendChild(s);
+}
+
+function setStatus(ok) {
+  const el = document.getElementById('status');
+  el.textContent = ok ? 'CONNECTED' : 'DISCONNECTED';
+  el.className = ok ? 'connected' : 'disconnected';
+}
+
+function connectWS() {
+  const url = document.getElementById('ws-url-bar').value.trim();
+  const btn = document.getElementById('connect-btn');
+  
+  if (ros && ros.isConnected) {
+    ros.close();
+    return;
+  }
+  
+  loadRoslib(() => {
+    if (ros) { ros.close(); }
+    ros = new ROSLIB.Ros({ url });
+    ros.on('connection', () => {
+      setStatus(true);
+      btn.textContent = 'Disconnect';
+      if (window.parent !== window) window.parent.postMessage({type: 'ROS_STATUS', connected: true}, '*');
+      subscribeTopics();
+    });
+    ros.on('error',  () => { 
+      setStatus(false); 
+      btn.textContent = 'Connect'; 
+      if (window.parent !== window) window.parent.postMessage({type: 'ROS_STATUS', connected: false}, '*');
+    });
+    ros.on('close',  () => { 
+      setStatus(false); 
+      btn.textContent = 'Connect'; 
+      if (window.parent !== window) window.parent.postMessage({type: 'ROS_STATUS', connected: false}, '*');
+    });
+  });
+}
+
+function subscribeTopics() {
+  document.getElementById('no-signal').style.display = 'none';
+  const img = document.getElementById('camera-img');
+  const resSelect = document.getElementById('cam-res-select');
+  
+  window.addEventListener('unload', () => {
+    if (img) img.src = "";
+  });
+
+  function updateCameraStream() {
+    img.src = ""; // Force browser to close the old connection first
+    setTimeout(() => {
+      const [w, h, q] = resSelect.value.split(',');
+      img.src = `http://localhost:8080/stream?topic=/camera/image_raw&type=mjpeg&width=${w}&height=${h}&quality=${q}&_ts=` + Date.now();
+    }, 50);
+  }
+
+  resSelect.addEventListener('change', updateCameraStream);
+
+  // Initial load
+  updateCameraStream();
+  img.style.display = 'block';
+
+  // Server-side (Robot) FPS
+  fpsSub = new ROSLIB.Topic({ ros, name: '/camera/fps', messageType: 'std_msgs/Float32' });
+  fpsSub.subscribe(msg => {
+    document.getElementById('robot-fps').textContent = msg.data.toFixed(1) + ' FPS';
+  });
+
+  // Browser-side FPS Calculator
+  const cvs = document.createElement('canvas');
+  cvs.width = 4; cvs.height = 4;
+  const ctx = cvs.getContext('2d', { willReadFrequently: true });
+  let lastHash = '';
+  let framesCount = 0;
+  let lastTime = performance.now();
+
+  function measureFps() {
+    if (img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, img.naturalWidth/2, img.naturalHeight/2, 4, 4, 0, 0, 4, 4);
+      const data = ctx.getImageData(0, 0, 4, 4).data;
+      const hash = data.join(',');
+      if (hash !== lastHash) {
+        lastHash = hash;
+        framesCount++;
+      }
+    }
+    const now = performance.now();
+    if (now - lastTime >= 1000) {
+      document.getElementById('browser-fps').textContent = framesCount + ' FPS';
+      framesCount = 0;
+      lastTime = now;
+    }
+    if (img.style.display === 'block') {
+      requestAnimationFrame(measureFps);
+    }
+  }
+  requestAnimationFrame(measureFps);
+
+  // Odometry
+  odomSub = new ROSLIB.Topic({ ros, name: '/odom', messageType: 'nav_msgs/Odometry' });
+  odomSub.subscribe(msg => {
+    const x = msg.pose.pose.position.x;
+    const y = msg.pose.pose.position.y;
+    const q = msg.pose.pose.orientation;
+    const yaw = Math.atan2(2*(q.w*q.z + q.x*q.y), 1 - 2*(q.y*q.y + q.z*q.z));
+    const lv = msg.twist.twist.linear.x;
+    const av = msg.twist.twist.angular.z;
+
+    document.getElementById('t-x').textContent   = x.toFixed(3) + ' m';
+    document.getElementById('t-y').textContent   = y.toFixed(3) + ' m';
+    document.getElementById('t-yaw').textContent = (yaw * 180/Math.PI).toFixed(1) + '°';
+    document.getElementById('t-lv').textContent  = lv.toFixed(3);
+    document.getElementById('t-av').textContent  = av.toFixed(3);
+
+    const now = Date.now();
+    odomCount++;
+    if (now - hzTimer >= 1000) {
+      document.getElementById('t-hz').textContent = odomCount + ' Hz';
+      odomCount = 0; hzTimer = now;
+    }
+
+    trail.push({ x, y, yaw });
+    if (trail.length > 2000) trail.shift();
+    drawTrajectory(x, y, yaw);
+  });
+
+  // cmd_vel publisher
+  cmdPub = new ROSLIB.Topic({ ros, name: '/cmd_vel', messageType: 'geometry_msgs/Twist' });
+}
+
+// ── Trajectory canvas ──
+function drawTrajectory(rx, ry, ryaw) {
+  const canvas = document.getElementById('traj-canvas');
+  const W = canvas.parentElement.clientWidth;
+  const H = canvas.parentElement.clientHeight - 32;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0d0d0d'; ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 1;
+  const step = 40;
+  for (let gx = W/2 % step; gx < W; gx += step) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+  for (let gy = H/2 % step; gy < H; gy += step) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+
+  if (trail.length < 2) return;
+
+  // Auto-scale
+  const xs = trail.map(p=>p.x), ys = trail.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+  const rangeX = Math.max(maxX-minX, 2), rangeY = Math.max(maxY-minY, 2);
+  const scale = Math.min((W-60)/rangeX, (H-60)/rangeY);
+  const cx = W/2 - (minX+maxX)/2*scale;
+  const cy = H/2 + (minY+maxY)/2*scale;
+  const tx = p => cx + p.x*scale;
+  const ty = p => cy - p.y*scale;
+
+  // Trail
+  ctx.beginPath(); ctx.strokeStyle = '#00d4ff88'; ctx.lineWidth = 2;
+  trail.forEach((p,i) => i===0 ? ctx.moveTo(tx(p),ty(p)) : ctx.lineTo(tx(p),ty(p)));
+  ctx.stroke();
+
+  // Robot arrow
+  const bx = tx({x:rx}), by = ty({y:ry});
+  ctx.save(); ctx.translate(bx, by); ctx.rotate(-ryaw);
+  ctx.beginPath();
+  ctx.moveTo(14, 0); ctx.lineTo(-8, 8); ctx.lineTo(-4, 0); ctx.lineTo(-8, -8); ctx.closePath();
+  ctx.fillStyle = '#00d4ff'; ctx.fill();
+  ctx.restore();
+
+  // Origin dot
+  const ox = tx({x:0}), oy = ty({y:0});
+  ctx.beginPath(); ctx.arc(ox,oy,4,0,2*Math.PI);
+  ctx.fillStyle = '#ff6b6b'; ctx.fill();
+}
+
+// ── Teleop ──
+function drive(lin, ang) {
+  if (!cmdPub) return;
+  const lspd = parseFloat(document.getElementById('lin-speed').value);
+  const aspd = parseFloat(document.getElementById('ang-speed').value);
+  cmdPub.publish(new ROSLIB.Message({
+    linear:  { x: lin*lspd, y: 0, z: 0 },
+    angular: { x: 0, y: 0, z: ang*aspd }
+  }));
+}
+function stop() {
+  if (!cmdPub) return;
+  cmdPub.publish(new ROSLIB.Message({ linear:{x:0,y:0,z:0}, angular:{x:0,y:0,z:0} }));
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  const k = { ArrowUp:'f', ArrowDown:'b', ArrowLeft:'l', ArrowRight:'r', ' ':'s' }[e.key];
+  if (!k) return;
+  e.preventDefault();
+  if (k==='f') drive(1,0); else if (k==='b') drive(-1,0);
+  else if (k==='l') drive(0,1); else if (k==='r') drive(0,-1);
+  else stop();
+});
+document.addEventListener('keyup', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) stop();
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('autoconnect') === 'true') {
+    connectWS();
+  }
+});
+</script>
+</body>
+</html>
