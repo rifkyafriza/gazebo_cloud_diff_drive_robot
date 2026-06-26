@@ -7,7 +7,7 @@ services:
     network_mode: host
     user: ubuntu
     volumes:
-      - ..:/home/ubuntu/gazebo_differencial_drive_robot
+      - ..:/home/ubuntu/gazebo_cloud_diff_drive_robot
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - DISPLAY=${DISPLAY}

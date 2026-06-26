@@ -2,7 +2,7 @@ FROM osrf/ros:jazzy-desktop-full
 
 ARG USER=ubuntu
 ENV DEBIAN_FRONTEND=noninteractive
-ENV WORKSPACE=/home/${USER}/gazebo_differencial_drive_robot
+ENV WORKSPACE=/home/${USER}/gazebo_cloud_diff_drive_robot
 SHELL ["/bin/bash", "-c"]
 
 # Create workspace as root

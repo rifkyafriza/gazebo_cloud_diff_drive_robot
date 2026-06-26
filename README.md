@@ -38,7 +38,7 @@ Clone this repository into your ``workspace/src`` folder. If you don't have a wo
 
 ```bash
 cd <path_to_your_workspace>/src
-git clone git@github.com:lucasmazz/gazebo_differential_drive_robot.git
+git clone git@github.com:lucasmazz/gazebo_cloud_diff_drive_robot.git
 cd ..
 ```
 
@@ -53,11 +53,11 @@ colcon build
 
 ### Launch the Robot
 
-After building the package, launch the ```robot.launch.py``` file from the ```gazebo_differential_drive_robot``` package:
+After building the package, launch the ```robot.launch.py``` file from the ```gazebo_cloud_diff_drive_robot``` package:
 
 ```bash
 source install/setup.bash
-ros2 launch gazebo_differential_drive_robot robot.launch.py
+ros2 launch gazebo_cloud_diff_drive_robot robot.launch.py
 ```
 
 To launch the robot in a specified world with a custom initial pose, run the `robot.launch.py` file and specify the world path and robot pose arguments.
@@ -74,12 +74,12 @@ To launch the robot in a specified world with a custom initial pose, run the `ro
 In the following example, the robot starts at position (x, y, z) = (1.0, 2.0, 0.5) with a yaw of 1.57 radians in the specified world:
 
 ```bash
-ros2 launch gazebo_differential_drive_robot robot.launch.py world:=empty.sdf x:=1.0 y:=2.0 z:=0.5 R:=0.0 P:=0.0 Y:=1.57
+ros2 launch gazebo_cloud_diff_drive_robot robot.launch.py world:=empty.sdf x:=1.0 y:=2.0 z:=0.5 R:=0.0 P:=0.0 Y:=1.57
 ```
 
 **Testing with Obstacles**: A custom world with colorful geometric obstacles is included for testing the camera and LiDAR sensors. You can launch it using:
 ```bash
-ros2 launch gazebo_differential_drive_robot robot.launch.py world:=src/gazebo_differential_drive_robot/worlds/obstacles.sdf
+ros2 launch gazebo_cloud_diff_drive_robot robot.launch.py world:=src/gazebo_cloud_diff_drive_robot/worlds/obstacles.sdf
 ```
 
 ### Control the Robot
@@ -138,7 +138,7 @@ docker exec -it gz_diff_drive_robot bash
 
 Launch ROS2:
 ```bash
-ros2 launch gazebo_differential_drive_robot robot.launch.py
+ros2 launch gazebo_cloud_diff_drive_robot robot.launch.py
 ```
 
 ### Control the robot

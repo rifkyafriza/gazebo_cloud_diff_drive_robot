@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>gazebo_differential_drive_robot</name>
+  <name>gazebo_cloud_diff_drive_robot</name>
   <version>0.0.0</version>
   <description>A ROS 2 package for simulating a simple differential drive robot. Includes robot description and Gazebo simulation integration.</description>
   <maintainer email="lucasrmazzetto@gmail.com">Lucas Mazzetto</maintainer>

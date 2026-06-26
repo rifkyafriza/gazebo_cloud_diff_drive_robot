@@ -12,7 +12,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Define the robot's name and package name
     robot_name = "differential_drive_robot"
-    package_name = "gazebo_differential_drive_robot"
+    package_name = "gazebo_cloud_diff_drive_robot"
 
     # Define a launch argument for the world file, defaulting to obstacles.sdf
     world_arg = DeclareLaunchArgument(
