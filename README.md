@@ -73,8 +73,13 @@ To launch the robot in a specified world with a custom initial pose, run the `ro
 
 In the following example, the robot starts at position (x, y, z) = (1.0, 2.0, 0.5) with a yaw of 1.57 radians in the specified world:
 
-```
+```bash
 ros2 launch gazebo_differential_drive_robot robot.launch.py world:=/path_to_world/world.sdf x:=1.0 y:=2.0 z:=0.5 R:=0.0 P:=0.0 Y:=1.57
+```
+
+**Testing with Obstacles**: A custom world with colorful geometric obstacles is included for testing the camera and LiDAR sensors. You can launch it using:
+```bash
+ros2 launch gazebo_differential_drive_robot robot.launch.py world:=src/gazebo_differential_drive_robot/worlds/obstacles.sdf
 ```
 
 ### Control the Robot
@@ -96,6 +101,13 @@ If you don't have a joystick, you can control the robot using the ```teleop_twis
 source /opt/ros/jazzy/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
+
+### Local Development Tools
+If you want to view the robot's camera feed directly on your local machine without setting up the remote dashboard or web servers, you can use the included viewer script:
+```bash
+./view_camera.py
+```
+This requires OpenCV (`python3-opencv`) and CV Bridge.
 
 ## Running with Docker
 
